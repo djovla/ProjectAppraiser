@@ -1,0 +1,670 @@
+#!/bin/bash
+
+#autor:joseph Laferriere
+#test if the appraiser folder exist if not System will create one
+if [[ ! -d "$HOME/appraiser" ]]
+   then
+       mkdir $HOME/appraiser
+fi
+
+#test if the the configuration files  exist if not creation of the file
+#this is to prevent any case where a user will get the script without the configuration files
+if [[ ! -f "$HOME/appraiser/self_defense.db" ]]
+    then
+	   touch $HOME/appraiser/self_defense.db
+	   echo "000:f_name:l_name:10:10:10 " >$HOME/appraiser/self_defense.db
+fi
+if [[ ! -f "$HOME/appraiser/work.db" ]]
+    then
+	   touch $HOME/appraiser/work.db
+	   echo "000:f_name:l_name:20:20:20 " >$HOME/appraiser/work.db
+fi
+if [[ ! -f "$HOME/appraiser/self_defense.cfg" ]]
+    then
+	   touch $HOME/appraiser/self_defense.cfg
+	   echo -e "punching:10\nkicking:10\nthrowing:10\nfoot-stamping:10\blocking:10" > $HOME/appraiser/self_defense.cfg
+	   
+fi
+if [[ ! -f "$HOME/appraiser/work.cfg" ]]
+    then
+	   touch $HOME/appraiser/work.cfg
+	   echo -e "communication:20\ntechnical ability:20\nprofessional:20" >$HOME/appraiser/work.cfg
+fi
+#color use in the SYSTEM
+RED='\033[0;31m'
+GR='\033[0;32m'
+NC='\033[0m'
+BL='\033[0;34m' 
+#length convention for input ID  to avoid Wrong manipulation of the System 
+
+ID_length=3    
+
+#function that display manin menu
+
+function displayMenu () {
+local display=$1
+if [[ display -eq 0 ]]
+then
+ echo -e "-------------------------------------\\n"
+ echo -e "Welcome to the Staff Appraisal System!\\n"
+ echo -e "OPTIONS                        NUMBER OF RECORDS:$GR[$(cat $CONFIGFILE_DB |wc -l)]$NC"
+ echo "-------"
+ echo "1. View a user record"
+ echo "2. View all users"
+ echo "3. Input a new record"
+ echo "4. Update a new record"
+ echo "5. Delete a new record"
+ echo "6. Exit"
+elif [[ display -eq  1 ]]
+then
+ echo "-----------"
+ echo "VIEW RECORD"
+ echo "-----------"	
+elif [[ display -eq  2 ]]
+then
+ echo "-----------------------------"
+ echo "REGISTER A USER IN THE SYSTEM"
+ echo "-----------------------------"	
+elif [[ display -eq  3 ]]
+then
+ echo "-----------------------------"
+ echo "UPDATE A USER IN THE SYSTEM"
+ echo "-----------------------------"	
+  elif [[ display -eq  4 ]]
+then
+ echo "-----------------------------"
+ echo "DELETE RECORD IN THE SYSTEM"
+ echo "-----------------------------"	
+fi
+
+}
+
+#function that display record
+function displayRecord () { 
+
+local recordFound=$1 
+local numDisplay=$2
+for ((i=1;i<=$numDisplay;i++)); do
+	local COLOR
+	local extract_record=$(cat $recordFound |head -$i |tail -1)
+	local recordUser=$(echo $extract_record |cut -d "#" -f1)
+	local numField=$(echo $recordUser |tr ":" " " |wc -w)
+	local num_cfg=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |wc -l)
+		 for ((j=1;j<=$numField;j++)); do
+			arrayField[$j]=$(echo $recordUser |cut -d ":" -f$j)
+		done	
+			 if [[ $(($i % 2)) -eq 0 ]]
+				then
+					COLOR=$BL
+			 else
+					COLOR=$NC				 
+			 fi
+	   echo -e "${COLOR}--------------------------------------------${NC}"
+	   echo "Appraisal RECORD FOR ${arrayField[3]} ${arrayField[2]} (ID: ${arrayField[1]})"|tr [:lower:] [:upper:]
+	   echo -e "${COLOR}--------------------------------------------${NC}"
+	   for  ((t=1;t<=num_cfg;t++)); do
+			local name_cfg_field=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |head -$t |tail -1)
+			echo "$name_cfg_field: ${arrayField[3+$t]}"
+	   done				
+	 
+	   echo -e "                                              ${COLOR}[${NC}page$i${COLOR}]${NC}"
+done
+rm $recordFound
+
+}
+
+#function that execute the option
+
+function optionChose () {
+
+local opt_choice=$1
+   case $opt_choice in 
+   1) getStaff ;;
+   2) getAllStaff ;;
+   3) setStaffRecord ;;
+   4) updateStaff ;;
+   5) deleteRecor ;;
+   6) clear
+       echo -e "${GR}END OF THE PROGRAM APPRAISAL${NC} "
+      echo -e "${GR}THANK YOU AND GOOD BYE${NC} [copyright JVL] " 
+	  exit ;;
+   esac
+}
+#function to test the option in the begining
+function testOption () {
+
+local opt_test=$1
+
+if [[ opt_test -eq 1 ]]
+  then
+	  echo true
+elif [[ opt_test -eq 2 ]]
+   then
+	  echo true
+elif [[ opt_test -eq 3 ]]
+   then
+	  echo true
+elif [[ opt_test -eq 4 ]]
+   then 
+	  echo true
+elif [[ opt_test -eq 5 ]]
+   then 
+	  echo true
+elif [[ opt_test -eq 6 ]]
+   then 
+	  echo true
+else
+	  echo false
+fi		  
+	  
+}
+
+#function that test the input for the option
+function testOptionInput () {
+  
+local start_input=true
+while [[ $start_input = true ]]
+do
+read -p "Please choose a valid Option :" opt_test
+if [[ opt_test -eq 1 ]]
+  then
+	  start_input=false
+	  optionChose $opt_test
+	  
+elif [[ opt_test -eq 2 ]]
+   then
+	  start_input=false
+	  optionChose $opt_test
+	  
+elif [[ opt_test -eq 3 ]]
+   then
+	   start_input=false
+	  optionChose $opt_test
+	 
+elif [[ opt_test -eq 4 ]]
+   then 
+	 start_input=false
+	 optionChose $opt_test
+	  
+elif [[ opt_test -eq 5 ]]
+   then
+	  start_input=false 	   
+	  optionChose $opt_test
+	  
+elif [[ opt_test -eq 6 ]]
+   then 
+	 start_input=false
+	 optionChose $opt_test
+   
+fi		  
+done		  
+}
+
+#function that get the staff ID as input  and return the record
+function getStaff () {
+
+read -p "Please Enter Staff ID :" id_user
+local verify=$(verifyInput $id_user 1 0) 
+while [[ $verify -ne 2 ]]
+do
+  if [[ $verify -eq 1 ]]
+	 then 
+		echo -e "${RED}THE ID CAN ONLY CONTAIN NUMBER${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   elif [[ verify -eq 0 ]]
+	 then
+		echo -e "${RED}WE DO NOT FOUND ANY MATCH - PLEASE PROVIDE A VALID ID${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   fi		  
+done
+if [[ $verify -eq 2 ]]
+then
+   local numRecord=$(cat $CONFIGFILE_DB |grep -w "$id_user" |wc -l)
+   local user=$(cat $CONFIGFILE_DB |grep -w "$id_user")"#" 
+   echo $user > $TEMPFILE
+   user=$TEMPFILE
+   
+   displayRecord $user $numRecord
+   read -n 1 -s -r -p "Press any key to return to main menu "
+   echo -e "\\n"
+fi	 
+}
+
+
+
+#function that return all the record
+function getAllStaff () {
+
+local numRecord=$(cat $CONFIGFILE_DB |wc -l)
+
+local user=""
+if [[ numRecord -gt 0 ]]
+then
+for ((i=1;i<=$numRecord;i++)); do	
+user=$(cat $CONFIGFILE_DB |head -$i |tail -1)"#" 
+echo $user >>$TEMPFILE
+done
+user=$TEMPFILE
+#	local numRecord=$(cat bin/userFile |wc -l)
+displayRecord $user $numRecord
+else
+echo "There is no record in the System "
+fi
+
+}
+#function that verify the input in the field
+function verifyInput () {
+
+ inputField=$1
+ field=$2
+ fieldLine=$3
+ local result
+if [[ $field -eq 1 ]]
+ then
+  if [[ $inputField =~ ^[0-9]+$ ]]
+	 then
+		 local length=$(echo -n $inputField |wc -m)
+		 if [[ $length -ne 3 ]]
+			 then
+			 echo 1
+		 else				 
+			 result=$(cat $CONFIGFILE_DB |grep -w "$inputField" |wc -l)
+			if [[ $result -ne 0 ]]
+			then
+			   echo 2
+			else
+			  echo 0
+		   fi				  
+		 fi
+   else
+	  echo 1
+   fi
+   
+fi  
+if [[ $field -eq 2 ]]
+ then
+  if [[ $inputField =~ ^[0-9]+$ ]]
+	 then
+		echo 1 
+  else
+	  echo 0
+  fi 
+fi  
+
+if [[ $field -eq 3 ]]
+ then
+  if [[ $inputField =~ ^[0-9]+$ ]]
+	 then
+		 result=$(cat $CONFIGFILE_CFG |cut -d ":" -f2 |head -$fieldLine |tail -1)
+		 if [[ $inputField -gt $result ]]
+			then
+			   echo 2
+		  else
+			  echo 0
+		  fi				  
+	 
+   else
+	  echo 1
+   fi
+   
+fi 
+
+if [[ $field -eq 4 ]]
+ then
+  if [[ $inputField =~ ^[0-9]+$ ]]
+	  then
+	 echo 0				  
+  else
+	  echo 1
+   fi
+   
+fi    
+}
+#function to register a person in the system
+function setStaffRecord () {
+
+displayMenu 2
+spaceR=":"
+local num_cfg=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |wc -l)
+read -p "Please Enter Staff ID :" id_user
+local verify=$(verifyInput $id_user 1 0) 
+local score_input=""
+while [[ $verify -ne 0 ]]
+do
+  if [[ $verify -eq 1 ]]
+	 then 
+	 echo -e "${RED}THE ID HAS TO BE 3 INTERGERS W/O LETTER ${NC}"
+	 read -p "Please Enter a Different Staff ID: " id_user
+	 verify=$(verifyInput $id_user 1 0) 
+  elif [[ verify -eq 2 ]]
+   then
+	  echo -e "${RED}THIS ID IS ALREADY IN THE SYSTEM${NC}"
+	  read -p "Please Enter a Different Staff ID: " id_user
+	  verify=$(verifyInput $id_user 1 0) 
+  fi		  
+done
+
+read -p "Please enter first name: " f_name
+local verify_fname=$(verifyInput $f_name 2 0)
+while [[ $verify_fname -ne 0 ]]
+do
+  
+	 echo -e "${RED}THE FIRST NAME CAN NOT HAVE NUMBER ON IT${NC}"
+	 read -p "Please Enter a Correct First Name: " f_name
+	 verify_fname=$(verifyInput $f_name 2 0) 
+  
+done
+
+read -p "Please enter last name: " l_name
+local verify_lname=$(verifyInput $l_name 2 0)
+while [[ $verify_lname -ne 0 ]]
+do
+  
+	 echo -e "${RED}THE LAST NAME CAN NOT HAVE NUMBER ON IT${NC}"
+	 read -p "Please Enter a Correct Last Name: " l_name
+	 verify_lname=$(verifyInput $f_name 2 0) 
+  
+done
+#get professionalism score input and verify if the value is valid 
+
+	  for  ((t=1;t<=num_cfg;t++)); do
+			local name_cfg_field=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |head -$t |tail -1)
+			
+		read -p "Please enter $name_cfg_field score: " pro_score
+		  local verify_pro_score=$(verifyInput $pro_score 3 1)
+			while [[ $verify_pro_score -ne 0 ]]
+		do
+		if [[ $verify_pro_score -eq 1 ]]
+	  then 
+	   echo -e "${RED}THE $name_cfg_field SCORE CAN ONLY CONTAIN INTEGER NUMBER |tr [a-z] [A-Z] ${NC}"
+	   read -p "Please Enter a Different $name_cfg_field score: " pro_score
+	 verify_pro_score=$(verifyInput $pro_score 3 1) 
+	  elif [[ $verify_pro_score -eq 2 ]]
+	   then
+	   echo -e "${RED}THE $name_cfg_field SCORE CAN NOT BE GREATER THAN${NC}: $(cat $CONFIGFILE_CFG |cut -d ":" -f2 |head -1 |tail -1)"
+	   read -p "Please Enter a Different $name_cfg_field score: " pro_score
+	  verify_pro_score=$(verifyInput $pro_score 3 1) 
+	   fi	
+		
+	   done	
+			
+		score_input=$score_input":"$pro_score	
+			
+	 done	
+		
+echo "$id_user$spaceR$f_name$spaceR$l_name$score_input" >>$CONFIGFILE_DB
+echo -e "${GR}USER :$f_name $l_name is REGISTER IN THE SYSTEM${NC} "
+}
+#function read user
+function readUser () {
+
+local id_user=$1
+local verify=$(verifyInput $id_user 1 0) 
+while [[ $verify -ne 2 ]]
+do
+  if [[ $verify -eq 1 ]]
+	 then 
+		echo -e "${RED}THE ID HAS TO BE 3 INTERGERS W/O LETTER${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   elif [[ verify -eq 0 ]]
+	 then
+		echo -e "${RED}WE DO NOT FOUND ANY MATCH - PLEASE PROVIDE A VALID ID${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   fi		  
+done
+if [[ $verify -eq 2 ]]
+then
+   local numRecord=$(cat $CONFIGFILE_DB |grep -w "$id_user" |wc -l)
+   local user=$(cat $CONFIGFILE_DB |grep -w "$id_user")"#" 
+   local num_cfg=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |wc -l)
+   echo $user > $TEMPFILE
+   user=$TEMPFILE
+   
+   displayRecord $user $numRecord
+				
+   echo -e "${BL}----------${NC}Choose an Option to Modify${BL}--------------${NC}"
+	echo " 1) First Name "  
+	echo " 2) Last Name "   
+	for  ((t=1;t<=num_cfg;t++)); do
+			local name_cfg_field=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |head -$t |tail -1)
+			echo " $[2+$t]) $name_cfg_field "
+   done
+   echo -e " $[3+$num_cfg])To return to main menu"
+   echo -e "${BL}-----------------------------------------------------------------${NC}"   
+fi
+
+}
+function readUserDelete () {
+
+local id_user=$1
+local verify=$(verifyInput $id_user 1 0) 
+while [[ $verify -ne 2 ]]
+do
+  if [[ $verify -eq 1 ]]
+	 then 
+		echo -e "${RED}THE ID HAS TO BE 3 INTERGERS W/O LETTER${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   elif [[ verify -eq 0 ]]
+	 then
+		echo -e "${RED}WE DO NOT FOUND ANY MATCH - PLEASE PROVIDE A VALID ID${NC}"
+		read -p "Please Enter a Different Staff ID: " id_user
+		verify=$(verifyInput $id_user 1 0) 
+   fi		  
+done
+
+if [[ $verify -eq 2 ]]
+then
+	local numRecord=$(cat $CONFIGFILE_DB |grep -w "$id_user" |wc -l)
+	local user=$(cat $CONFIGFILE_DB |grep -w "$id_user")"#"
+	local num_cfg=$(cat $CONFIGFILE_CFG |cut -d ":" -f1 |wc -l)	   
+   echo $user > $TEMPFILE
+   user=$TEMPFILE
+   
+   displayRecord $user $numRecord
+   echo -e "${BL}------------${NC}DO YOU WANT TO DELETE THE RECORD${BL}--------------${NC}"
+   echo -e "                 1)[Yes]           2)[Cancel]"       
+   echo -e "${BL}-------------------------------------------------------------${NC}"   
+fi	 	 
+}
+function replaceString () {
+local text=$1
+local num_word=$[$2-1]
+local field_number=$3
+local input_string=$4
+local text_begin
+local text_end
+local new_text
+ 
+ if [[ $field_number -lt $num_word ]]
+	 then
+	  local place=$[$field_number+2]
+	  text_begin=$(echo $text |cut -d ":" -f-$field_number)
+	  text_end=$(echo $text |cut -d ":" -f$place-)
+	  new_text=$(echo "$text_begin:$input_string:$text_end")
+	  echo $new_text
+elif [[ $field_number -eq $num_word ]]
+	 then
+	  text_begin=$(echo $text |cut -d ":" -f-$field_number)
+	  new_text=$(echo "$text_begin:$input_string")
+	  echo $new_text	  
+ fi	  
+}
+  
+
+#function to update a Staff
+function updateStaff (){
+
+displayMenu 3
+local verify_option
+local update_record
+read -p "Please Enter the Staff ID: " id_staff
+readUser $id_staff
+ local record_found=$(cat $CONFIGFILE_DB |grep -w "$id_staff")
+ local numwords=$(echo $record_found |tr ":" " " |wc -w)
+ # local lineOfRecord=$( cat -n bin/userFile |grep $id_user |cut -f1)
+read -p "Please Choose The Field To Update Or Enter $num_words to return to Main Menu: " option_field
+
+while [[ $option_field -ne numwords ]]
+	do   
+		  verify_option=(verifyInput $option_field 4 0)
+		  while [[ verify_option -ne 0 ]]
+				 do
+				 echo -e "${RED}PLEASE ENTER A VALID OPTION${NC}"
+				 read -p "Please Enter a Different Choice: " option_field    
+				 verify_option=(verifyInput $option_field 4 0)
+		  done
+		if [[ $option_field -gt numwords ]]
+			then
+			 echo -e "${RED}PLEASE ENTER A VALID OPTION${NC}"
+			  read -p "Please Enter a Different Choice: " option_field
+			   
+		 elif [[ $option_field -lt 3 ]]
+		  then
+		   read -p "Please enter  your change: " new_string
+		   local verify_fname=$(verifyInput $new_string 2 0)
+		  while [[ $verify_fname -ne 0 ]]
+		   do
+  
+			echo -e "${RED}THE FIRST NAME CAN NOT HAVE NUMBER ON IT${NC}"
+			read -p "Please Enter a Correct First Name: " new_string
+			verify_fname=$(verifyInput $new_string 2 0) 
+  
+		  done
+			  record_found=$(cat $CONFIGFILE_DB |grep -w "$id_staff")
+			 update_record=$(replaceString $record_found $numwords $option_field $new_string)
+			 echo -e "${GR}UPDATE SUCCESS:[ $update_record ]${NC}" 
+			  cat  $CONFIGFILE_DB |grep -v "$id_staff" >$TEMPFILE
+			  echo "$update_record " >>$TEMPFILE
+			  cat $TEMPFILE > $CONFIGFILE_DB
+			  rm $TEMPFILE
+		elif [[ $option_field -ge 3 ]]
+		  then
+		  read -p "Please enter  score: " score
+		  local verify_score=$(verifyInput $score 3 3)
+		  while [[ $verify_score -ne 0 ]]
+			 do
+			  if [[ $verify_score -eq 1 ]]
+			   then 
+				 echo -e "${RED}THE C SCORE CAN ONLY CONTAIN INTEGER NUMBER${NC}"
+				 read -p "Please Enter a Different  score: " score
+			  verify_score=$(verifyInput $score 3 3) 
+			elif [[ $verify_score -eq 2 ]]
+			   then
+				 echo -e "${RED}THE  SCORE CAN NOT BE GREATER THAN${NC}: $(cat $CONFIGFILE_CFG |cut -d ":" -f2 |head -3 |tail -1)"
+				 read -p "Please Enter a Different score: " score
+				   verify_score=$(verifyInput $score 3 3) 
+			fi		  
+		  done
+			record_found=$(cat $CONFIGFILE_DB |grep -w "$id_staff")
+			update_record=$(replaceString $record_found $numwords $option_field $score)
+			 echo -e "${GR}UPDATE SUCCESS:[ $update_record ]${NC}" 
+			  cat  $CONFIGFILE_DB |grep -v "$id_staff" >$TEMPFILE
+			  echo "$update_record " >>$TEMPFILE
+			  cat $TEMPFILE > $CONFIGFILE_DB
+			  rm $TEMPFILE
+		fi
+		readUser $id_staff
+		read -p " Please Choose The Field To Update Or Enter $num_words to return to Main Menu: " option_field
+done		
+
+}
+
+function deleteRecor () {
+
+displayMenu 4
+local verify_option
+local update_record
+read -p "Please Enter the Staff ID: " id_staff
+readUserDelete $id_staff
+local record_found=$(cat $CONFIGFILE_DB |grep -w "$id_staff")
+local numwords=$(echo $record_found |tr ":" " " |wc -w)
+# local lineOfRecord=$( cat -n bin/userFile |grep $id_user |cut -f1)
+read -p "Chose an Option: " option_field
+
+while [[ $option_field -ne 2 ]]
+	do   
+			  if [[ $option_field -eq 1 ]]
+					 then
+						 verify_option=0
+				 elif [[ $option_field -eq 2 ]]
+						then
+						 verify_option=0
+				 else
+						verify_option=1
+				 fi						
+		  
+		  while [[ verify_option -ne 0 ]]
+				 do
+				 echo -e "${RED}PLEASE ENTER A VALID OPTION${NC}"
+				 read -p "Please Enter a Different Choice: " option_field    
+				 verify_option=(verifyInput $option_field 4 0)
+				 if [[ $option_field -eq 1 ]]
+					 then
+						 verify_option=0
+				 elif [[ $option_field -eq 2 ]]
+						then
+						 verify_option=0
+				 else
+						verify_option=1
+				 fi							
+		 done
+				
+		 
+		if [[ $option_field -eq 1 ]]
+			then
+			 record_found=$(cat $CONFIGFILE_DB |grep -w "$id_staff")
+			 echo -e "${GR}DELTER SUCCESS:[ $record_found ]${NC}" 
+			 cat  $CONFIGFILE_DB |grep -v "$id_staff" >$TEMPFILE
+			 cat $TEMPFILE > $CONFIGFILE_DB
+			 rm $TEMPFILE
+			 option_field=2
+		fi 
+		
+done		
+}
+#main body of the SYSTEM  
+numberOfArgument=$(( $#))
+command_argument=$1
+CONFIGFILE_DB="$HOME/appraiser/work.db"
+CONFIGFILE_CFG="$HOME/appraiser/work.cfg"
+TEMPFILE="$HOME/appraiser/.tempFile"
+#test if an argument is pass  and if is not more than one 
+# in the case is only check if the name is self_defense if not default configuration is uploaded
+if [[ numberOfArgument -eq 1 ]]
+ then
+	 if [[ $command_argument = self_defense ]]
+		 then
+	  
+		  CONFIGFILE_DB="$HOME/appraiser/self_defense.db"
+		  CONFIGFILE_CFG="$HOME/appraiser/self_defense.cfg"
+	 fi   
+fi		 
+#this where the call is made to start the application 
+#i use an infinite loop but the interuption of the application is manage by a case statement
+#i also create a function to manage illegal input 
+start=true
+while [ $start = true ]
+do
+
+displayMenu 0
+
+read -p "Please choose an option :" choice
+
+begin=$(testOption $choice)
+
+if [ $begin = true ]
+then
+optionChose $choice
+
+else
+testOptionInput 
+fi
+
+
+
+done
